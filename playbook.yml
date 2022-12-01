@@ -1,0 +1,62 @@
+---  ### java and Jenkins
+- name: Disable package upgrade based on partial name
+  hosts: all
+  gather_facts: false
+  become: true
+
+  vars:
+    partial_hold_name: openjdk
+    partial_hold_regexp: "^{{ partial_hold_name }}.*"
+    hold_package_list: "{{ packages | dict2items | map(attribute='key') | select('match', partial_hold_regexp) | list }}"
+
+  tasks:
+    - name: Gather package facts
+      package_facts:
+
+    - name: dselect all openjdk packages if they exists
+      dpkg_selections:
+        name: "{{ item }}"
+        selection: hold
+      loop: "{{ hold_package_list }}"
+
+    - name: update apt Install jenkins
+      apt:
+       name: jenkins
+       state: latest
+
+    - name: Start jenkins
+      ansible.builtin.systemd:
+       name: jenkins
+       state: started
+
+## Docker & Docker-compose
+
+    - name: Update apt and install docker
+      apt:
+        name: docker
+        state: latest
+        update_cache: true
+    - name: Update apt and install docker-compose
+      apt:
+        name: docker-compose
+        state: latest
+        update_cache: true
+
+### Nginx & proxy
+
+    - name: Update apt cache and install Nginx
+      apt:
+        name: nginx
+        state: latest
+        update_cache: yes
+
+
+
+
+
+
+
+
+  
+  
+
